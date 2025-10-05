@@ -1,0 +1,50 @@
+{% extends 'blog/base.html' %}
+
+{% block title %}Delete Post - Django Blog{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-lg-6">
+        <div class="card border-danger">
+            <div class="card-header bg-danger text-white">
+                <h4><i class="fas fa-exclamation-triangle"></i> Delete Post</h4>
+            </div>
+            <div class="card-body">
+                <div class="alert alert-warning">
+                    <i class="fas fa-warning"></i>
+                    <strong>Warning:</strong> This action cannot be undone!
+                </div>
+
+                <p>Are you sure you want to delete the following post?</p>
+                
+                <div class="card bg-light">
+                    <div class="card-body">
+                        <h5 class="card-title">{{ post.title }}</h5>
+                        <p class="card-text">
+                            <small class="text-muted">
+                                <i class="fas fa-user"></i> {{ post.author.username }}
+                                <i class="fas fa-calendar ms-3"></i> {{ post.created_at|date:"M d, Y" }}
+                                <i class="fas fa-eye ms-3"></i> {{ post.view_count }} views
+                            </small>
+                        </p>
+                        <p class="card-text">{{ post.content|truncatewords:20 }}</p>
+                    </div>
+                </div>
+
+                <form method="post" class="mt-4">
+                    {% csrf_token %}
+                    <div class="d-flex justify-content-between">
+                        <a href="{{ post.get_absolute_url }}" class="btn btn-secondary">
+                            <i class="fas fa-arrow-left"></i> Cancel
+                        </a>
+                        
+                        <button type="submit" class="btn btn-danger">
+                            <i class="fas fa-trash"></i> Yes, Delete Post
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

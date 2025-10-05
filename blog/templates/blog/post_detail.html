@@ -1,0 +1,228 @@
+{% extends 'blog/base.html' %}
+
+{% block title %}{{ post.title }} - Django Blog{% endblock %}
+
+{% block content %}
+<div class="row">
+    <!-- Main Content -->
+    <div class="col-lg-8">
+        <!-- Post Content -->
+        <article class="card">
+            <div class="card-body">
+                <header class="mb-4">
+                    <h1 class="card-title">{{ post.title }}</h1>
+                    
+                    <div class="d-flex justify-content-between align-items-center mb-3">
+                        <div class="text-muted">
+                            <small>
+                                <i class="fas fa-user"></i> 
+                                <strong>{{ post.author.get_full_name|default:post.author.username }}</strong>
+                                <i class="fas fa-calendar ms-3"></i> {{ post.created_at|date:"F d, Y" }}
+                                <i class="fas fa-eye ms-3"></i> {{ post.view_count }} views
+                            </small>
+                        </div>
+                        
+                        {% if post.featured %}
+                            <span class="badge bg-warning text-dark">
+                                <i class="fas fa-star"></i> Featured
+                            </span>
+                        {% endif %}
+                    </div>
+                    
+                    {% if post.category %}
+                        <div class="mb-3">
+                            <span class="badge bg-primary">
+                                <i class="fas fa-folder"></i> 
+                                <a href="{% url 'blog:category_posts' post.category.slug %}" 
+                                   class="text-white text-decoration-none">
+                                    {{ post.category.name }}
+                                </a>
+                            </span>
+                        </div>
+                    {% endif %}
+                </header>
+
+                <div class="post-content">
+                    {{ post.content|linebreaks }}
+                </div>
+
+                {% if post.updated_at != post.created_at %}
+                    <div class="text-muted mt-4">
+                        <small>
+                            <i class="fas fa-edit"></i> Last updated: {{ post.updated_at|date:"F d, Y \a\t g:i A" }}
+                        </small>
+                    </div>
+                {% endif %}
+            </div>
+        </article>
+
+        <!-- Comments Section -->
+        <div class="card mt-4">
+            <div class="card-header">
+                <h5><i class="fas fa-comments"></i> Comments ({{ comments.count }})</h5>
+            </div>
+            <div class="card-body">
+                {% if comments %}
+                    {% for comment in comments %}
+                        <div class="comment mb-3 {% if not forloop.last %}border-bottom pb-3{% endif %}">
+                            <div class="d-flex justify-content-between align-items-start">
+                                <div>
+                                    <h6 class="mb-1">
+                                        <i class="fas fa-user-circle"></i> {{ comment.author.get_full_name|default:comment.author.username }}
+                                    </h6>
+                                    <small class="text-muted">
+                                        <i class="fas fa-clock"></i> {{ comment.created_at|date:"M d, Y \a\t g:i A" }}
+                                    </small>
+                                </div>
+                            </div>
+                            <p class="mt-2 mb-0">{{ comment.content|linebreaks }}</p>
+                        </div>
+                    {% endfor %}
+                {% else %}
+                    <p class="text-muted">No comments yet. Be the first to comment!</p>
+                {% endif %}
+
+                <!-- Comment Form -->
+                {% if user.is_authenticated %}
+                    <div class="mt-4">
+                        <h6>Add a Comment</h6>
+                        <form method="post">
+                            {% csrf_token %}
+                            <div class="mb-3">
+                                {{ form.content }}
+                                {% if form.content.errors %}
+                                    <div class="text-danger">
+                                        {% for error in form.content.errors %}
+                                            <small>{{ error }}</small>
+                                        {% endfor %}
+                                    </div>
+                                {% endif %}
+                            </div>
+                            <button type="submit" class="btn btn-primary">
+                                <i class="fas fa-paper-plane"></i> Post Comment
+                            </button>
+                        </form>
+                    </div>
+                {% else %}
+                    <div class="alert alert-info mt-4">
+                        <i class="fas fa-info-circle"></i> 
+                        Please <a href="{% url 'blog:login' %}" class="alert-link">login</a> to post a comment.
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+
+    <!-- Sidebar -->
+    <div class="col-lg-4">
+        <!-- Author Info -->
+        <div class="card mb-4">
+            <div class="card-header">
+                <h6><i class="fas fa-user"></i> About the Author</h6>
+            </div>
+            <div class="card-body text-center">
+                <div class="bg-primary text-white rounded-circle d-inline-flex align-items-center justify-content-center mb-3" 
+                     style="width: 80px; height: 80px;">
+                    <i class="fas fa-user fa-2x"></i>
+                </div>
+                <h6>{{ post.author.get_full_name|default:post.author.username }}</h6>
+                <small class="text-muted">
+                    Joined {{ post.author.date_joined|date:"M Y" }}
+                </small>
+                <div class="mt-2">
+                    <span class="badge bg-light text-dark">
+                        {{ post.author.blog_posts.count }} posts
+                    </span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Related Posts -->
+        {% if related_posts %}
+            <div class="card mb-4">
+                <div class="card-header">
+                    <h6><i class="fas fa-newspaper"></i> Related Posts</h6>
+                </div>
+                <div class="card-body">
+                    {% for related_post in related_posts %}
+                        <div class="d-flex mb-3">
+                            <div class="flex-shrink-0">
+                                <div class="bg-secondary text-white rounded d-flex align-items-center justify-content-center" 
+                                     style="width: 40px; height: 40px;">
+                                    <i class="fas fa-file-alt"></i>
+                                </div>
+                            </div>
+                            <div class="flex-grow-1 ms-3">
+                                <h6 class="mb-1">
+                                    <a href="{{ related_post.get_absolute_url }}" class="text-decoration-none">
+                                        {{ related_post.title|truncatewords:6 }}
+                                    </a>
+                                </h6>
+                                <small class="text-muted">
+                                    {{ related_post.created_at|date:"M d, Y" }}
+                                </small>
+                            </div>
+                        </div>
+                    {% endfor %}
+                </div>
+            </div>
+        {% endif %}
+
+        <!-- Post Stats -->
+        <div class="card">
+            <div class="card-header">
+                <h6><i class="fas fa-chart-bar"></i> Post Statistics</h6>
+            </div>
+            <div class="card-body">
+                <div class="row text-center">
+                    <div class="col-4">
+                        <div class="text-primary">
+                            <i class="fas fa-eye fa-2x"></i>
+                            <div class="mt-1">
+                                <strong>{{ post.view_count }}</strong>
+                                <div><small>Views</small></div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-4">
+                        <div class="text-success">
+                            <i class="fas fa-comments fa-2x"></i>
+                            <div class="mt-1">
+                                <strong>{{ comments.count }}</strong>
+                                <div><small>Comments</small></div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-4">
+                        <div class="text-warning">
+                            <i class="fas fa-calendar fa-2x"></i>
+                            <div class="mt-1">
+                                <strong>{{ post.created_at|date:"d" }}</strong>
+                                <div><small>{{ post.created_at|date:"M" }}</small></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Navigation -->
+<div class="row mt-4">
+    <div class="col-12">
+        <div class="d-flex justify-content-between">
+            <a href="{% url 'blog:home' %}" class="btn btn-outline-secondary">
+                <i class="fas fa-arrow-left"></i> Back to Home
+            </a>
+            <div>
+                {% if post.category %}
+                    <a href="{% url 'blog:category_posts' post.category.slug %}" class="btn btn-outline-primary">
+                        More in {{ post.category.name }} <i class="fas fa-arrow-right"></i>
+                    </a>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
